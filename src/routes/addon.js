@@ -20,8 +20,10 @@ function handleManifest(req, res) {
         background: `${currentBase}/assets/banner.jpg`
     };
 
-    if (userConfig.debridProvider) {
+    if (userConfig.debridProvider && userConfig.debridProvider !== 'none') {
         customManifest.description = `⚡ Skipr [Active: ${userConfig.debridProvider.toUpperCase()}]: Auto-skips intros & recaps seamlessly.`;
+    } else {
+        customManifest.description = `⚡ Skipr [Free Mode]: Auto-skips TV intros & recaps seamlessly.`;
     }
 
     res.setHeader('Access-Control-Allow-Origin', '*');

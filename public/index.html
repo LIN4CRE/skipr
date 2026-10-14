@@ -240,14 +240,15 @@
       <div class="form-group">
         <label for="debridProvider">Debrid Service</label>
         <select id="debridProvider">
-          <option value="realdebrid" selected>Real-Debrid</option>
+          <option value="none" selected>None (Free / Direct Torrents — No Key Needed)</option>
+          <option value="realdebrid">Real-Debrid</option>
           <option value="torbox">TorBox</option>
           <option value="alldebrid">AllDebrid</option>
           <option value="premiumize">Premiumize</option>
         </select>
       </div>
 
-      <div class="form-group">
+      <div class="form-group" id="debridKeyGroup" style="display: none;">
         <label for="debridKey">Debrid API Key / Token</label>
         <input type="password" id="debridKey" placeholder="Paste your API key here (e.g. Real-Debrid API token)">
       </div>
@@ -371,6 +372,11 @@
         document.getElementById('connectionBadge').innerText = '🏠 Local Host';
         updateUrls();
       });
+
+    document.getElementById('debridProvider').addEventListener('change', (e) => {
+      document.getElementById('debridKeyGroup').style.display = e.target.value === 'none' ? 'none' : 'block';
+      updateUrls();
+    });
 
     document.getElementById('scraperSelect').addEventListener('change', (e) => {
       document.getElementById('customScraper').style.display = e.target.value === 'custom' ? 'block' : 'none';
