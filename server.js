@@ -73,23 +73,32 @@ if (require.main === module) {
         logger.success(`🚀 Skipr is running at: http://localhost:${PORT}`);
         logger.info(`⚙️  Configurator:     http://localhost:${PORT}/configure`);
 
-        // Automatically start public HTTPS tunnel for Stremio TV & Web
+        // Automatically start public HTTPS tunnel for Stremio TV & Web with auto-reconnect
         if (!process.env.PUBLIC_URL && process.env.DISABLE_TUNNEL !== 'true') {
-            try {
-                const lt = require('localtunnel');
-                logger.info('Opening secure HTTPS tunnel for Stremio TV & Web...');
-                const tunnel = await lt({ port: PORT });
-                currentPublicUrl = tunnel.url;
-                logger.success(`🌐 Public HTTPS URL: ${currentPublicUrl}`);
-                logger.info(`📺 Stremio Manifest: ${currentPublicUrl}/manifest.json`);
-                logger.info(`⚙️  Web Configurator: ${currentPublicUrl}/configure`);
+            async function establishTunnel() {
+                try {
+                    const lt = require('localtunnel');
+                    logger.info('Opening secure HTTPS tunnel for Stremio TV & Web...');
+                    const tunnel = await lt({ port: PORT });
+                    currentPublicUrl = tunnel.url;
+                    logger.success(`🌐 Public HTTPS URL: ${currentPublicUrl}`);
+                    logger.info(`📺 Stremio Manifest: ${currentPublicUrl}/manifest.json`);
+                    logger.info(`⚙️  Web Configurator: ${currentPublicUrl}/configure`);
 
-                tunnel.on('close', () => {
-                    logger.warn('HTTPS Tunnel closed');
-                });
-            } catch (e) {
-                logger.warn(`Could not start HTTPS tunnel: ${e.message}`);
+                    tunnel.on('close', () => {
+                        logger.warn('HTTPS Tunnel disconnected. Reconnecting in 5 seconds...');
+                        setTimeout(establishTunnel, 5000);
+                    });
+                    tunnel.on('error', (err) => {
+                        logger.warn(`Tunnel error: ${err.message}. Retrying in 5 seconds...`);
+                        setTimeout(establishTunnel, 5000);
+                    });
+                } catch (e) {
+                    logger.warn(`Could not start HTTPS tunnel: ${e.message}. Retrying in 10s...`);
+                    setTimeout(establishTunnel, 10000);
+                }
             }
+            establishTunnel();
         } else if (currentPublicUrl) {
             logger.info(`🌐 Public URL configured: ${currentPublicUrl}`);
         }
