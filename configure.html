@@ -297,6 +297,12 @@
         <div id="manifestUrl" class="manifest-box">Generating URL...</div>
       </div>
 
+      <div id="qrContainer" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px; background: #0d0a1c; border-radius: 10px; border: 1px dashed var(--card-border);">
+        <span style="font-size: 13px; font-weight: 600; color: #cfd5e6;">📱 Or Scan with Phone Camera to Install on TV:</span>
+        <img id="qrCodeImg" src="" alt="QR Code" style="width: 150px; height: 150px; border-radius: 8px; background: white; padding: 6px;">
+        <span style="font-size: 11px; color: var(--text-muted);">Points directly to your live Stremio addon install link</span>
+      </div>
+
       <div class="tv-tips">
         📺 <strong>Two Ways to Install:</strong><br>
         • <strong>Way 1 (1-Click):</strong> Click the <strong>⚡ Install to Stremio</strong> button above.<br>
@@ -351,6 +357,11 @@
 
       document.getElementById('manifestUrl').innerText = manifestUrl;
       document.getElementById('installBtn').href = stremioUrl;
+
+      // Update Live QR Code
+      const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=4&data=${encodeURIComponent(stremioUrl)}`;
+      const qrImg = document.getElementById('qrCodeImg');
+      if (qrImg) qrImg.src = qrApi;
     }
 
     // Fetch server tunnel info for HTTPS Stremio compatibility
