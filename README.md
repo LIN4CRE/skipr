@@ -10,6 +10,7 @@
 [![Node: >=18](https://img.shields.io/badge/node->=18-green.svg)](https://nodejs.org/)
 [![Stremio Protocol: v3](https://img.shields.io/badge/Stremio-Addon%20Protocol%20v3-purple.svg)](https://stremio.github.io/stremio-addon-sdk/)
 [![Docker: Ready](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
+[![Buy Me a Coffee](https://img.shields.io/badge/Donate-Buy%20Me%20a%20Coffee-FFDD00.svg?logo=buy-me-a-coffee&logoColor=black)](https://paypal.me/dlinacre16)
 
 [**Features**](#-features) • [**Quick Start for TV**](#-quick-start-for-tv) • [**How It Works**](#-how-it-works) • [**Self-Hosting**](#-self-hosting) • [**Configuration**](#-configuration)
 
@@ -150,6 +151,16 @@ Create a `.env` file to customize your setup:
 - `GET /hls/manifest.m3u8` — Dynamic HLS playlist generator
 - `GET /configure` — Interactive web configurator UI
 - `GET /health` — Addon health status
+
+---
+
+## ☕ Support the Project
+
+If Skipr saves you time and makes your TV streaming experience better, consider buying a coffee!
+
+[![Buy Me a Coffee](https://img.shields.io/badge/Donate-Buy%20Me%20a%20Coffee-FFDD00.svg?style=for-the-badge&logo=paypal&logoColor=black)](https://paypal.me/dlinacre16)
+
+👉 **Donate via PayPal:** [paypal.me/dlinacre16](https://paypal.me/dlinacre16)
 
 ---
 
