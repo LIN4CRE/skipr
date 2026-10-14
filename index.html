@@ -193,6 +193,18 @@
       color: #c4cadc;
     }
 
+    .tunnel-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      background: rgba(0, 242, 254, 0.1);
+      color: var(--accent-cyan);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(0, 242, 254, 0.3);
+    }
+
     .manifest-box {
       background: #0d0a1c;
       padding: 12px;
@@ -269,7 +281,10 @@
     </div>
 
     <div class="card">
-      <div class="section-title">🚀 3. Install to Stremio</div>
+      <div class="section-title">
+        <span>🚀 3. Install to Stremio</span>
+        <span id="connectionBadge" class="tunnel-badge">Connecting...</span>
+      </div>
       
       <div class="action-row">
         <a href="#" id="installBtn" class="btn btn-primary">⚡ Install to Stremio</a>
@@ -282,9 +297,10 @@
       </div>
 
       <div class="tv-tips">
-        📺 <strong>Watching on Android TV / Fire Stick?</strong><br>
-        • <strong>Fastest 10-Second Method:</strong> Log into the same Stremio account on your phone/PC and click <em>Install to Stremio</em> above. Stremio will instantly sync Skipr to your TV!<br>
-        • <strong>Or on your TV:</strong> Open Stremio $\rightarrow$ Addons $\rightarrow$ Search or paste the short URL above.
+        📺 <strong>Two Ways to Install:</strong><br>
+        • <strong>Way 1 (1-Click):</strong> Click the <strong>⚡ Install to Stremio</strong> button above.<br>
+        • <strong>Way 2 (Direct Paste):</strong> If Stremio shows <em>Failed to fetch</em>, click <strong>📋 Copy Manifest URL</strong>, open Stremio $\rightarrow$ <strong>Addons</strong> $\rightarrow$ paste the copied URL directly into Stremio's search bar and press Enter!<br>
+        • <strong>On Android TV / Fire Stick:</strong> Installing on your PC/phone while logged into Stremio automatically syncs Skipr to your TV in seconds.
       </div>
     </div>
 
@@ -294,6 +310,8 @@
   </div>
 
   <script>
+    let publicUrl = null;
+
     function encodeConfig(obj) {
       const json = JSON.stringify(obj);
       return btoa(json).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -319,13 +337,40 @@
       };
 
       const encoded = encodeConfig(config);
-      const origin = window.location.origin;
-      const manifestUrl = `${origin}/${encoded}/manifest.json`;
-      const stremioUrl = `stremio://${manifestUrl.replace(/^https?:\/\//, '')}`;
+      
+      // Use public HTTPS tunnel URL if available; otherwise use current origin or 127.0.0.1
+      let base = publicUrl || window.location.origin;
+      if (base.includes('localhost')) {
+        base = base.replace('localhost', '127.0.0.1');
+      }
+
+      const manifestUrl = `${base}/${encoded}/manifest.json`;
+      const cleanHostAndPath = manifestUrl.replace(/^https?:\/\//, '');
+      const stremioUrl = `stremio://${cleanHostAndPath}`;
 
       document.getElementById('manifestUrl').innerText = manifestUrl;
       document.getElementById('installBtn').href = stremioUrl;
     }
+
+    // Fetch server tunnel info for HTTPS Stremio compatibility
+    fetch('/api/info')
+      .then(res => res.json())
+      .then(data => {
+        const badge = document.getElementById('connectionBadge');
+        if (data.publicUrl && data.publicUrl.startsWith('https://')) {
+          publicUrl = data.publicUrl;
+          badge.innerText = '🔒 HTTPS Public Tunnel Ready';
+          badge.style.color = '#00f2fe';
+        } else {
+          badge.innerText = '🏠 Local Host';
+          badge.style.color = '#a855f7';
+        }
+        updateUrls();
+      })
+      .catch(() => {
+        document.getElementById('connectionBadge').innerText = '🏠 Local Host';
+        updateUrls();
+      });
 
     document.getElementById('scraperSelect').addEventListener('change', (e) => {
       document.getElementById('customScraper').style.display = e.target.value === 'custom' ? 'block' : 'none';
