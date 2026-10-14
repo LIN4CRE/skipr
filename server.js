@@ -1,0 +1,69 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const ffmpeg = require('fluent-ffmpeg');
+
+const { PORT, PUBLIC_URL } = require('./src/config/constants');
+const logger = require('./src/utils/logger');
+
+// Setup static ffmpeg / ffprobe binaries if available
+try {
+    const ffmpegPath = require('ffmpeg-static');
+    const ffprobePath = require('ffprobe-static').path;
+    if (ffmpegPath) ffmpeg.setFfmpegPath(ffmpegPath);
+    if (ffprobePath) ffmpeg.setFfprobePath(ffprobePath);
+} catch {
+    logger.info('Using system ffmpeg / ffprobe binaries');
+}
+
+const addonRoutes = require('./src/routes/addon');
+const hlsRoutes = require('./src/routes/hls');
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+// Serve static assets from public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Web Configurator UI
+app.get(['/', '/configure', '/configure.html'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Health Checks
+app.get(['/health', '/ping'], (req, res) => {
+    res.json({
+        status: 'ok',
+        name: 'Skipr',
+        version: '1.0.0',
+        uptime: process.uptime()
+    });
+});
+
+// Stremio Addon & HLS Routes
+app.use('/', addonRoutes);
+app.use('/', hlsRoutes);
+
+// 404 Handler
+app.use((req, res) => {
+    res.status(404).json({ error: 'Route not found', path: req.path });
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    logger.error(`Unhandled error: ${err.message}`);
+    res.status(500).json({ error: 'Internal Server Error' });
+});
+
+if (require.main === module) {
+    app.listen(PORT, '0.0.0.0', () => {
+        logger.success(`🚀 Skipr is running at: http://localhost:${PORT}`);
+        logger.info(`📺 Stremio Manifest: http://localhost:${PORT}/manifest.json`);
+        logger.info(`⚙️  Configurator:     http://localhost:${PORT}/configure`);
+    });
+}
+
+module.exports = app;

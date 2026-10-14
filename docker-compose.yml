@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  skipr:
+    build: .
+    container_name: skipr-addon
+    restart: unless-stopped
+    ports:
+      - "7005:7005"
+    environment:
+      - PORT=7005
+      - NODE_ENV=production
+      # - PUBLIC_URL=https://your-domain.com

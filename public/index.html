@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skipr — Auto Intro Skip for Stremio</title>
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --bg: #0b0914;
+      --card: #151126;
+      --card-border: #2b234d;
+      --accent-cyan: #00f2fe;
+      --accent-purple: #9d4edd;
+      --text: #f0f2f5;
+      --text-muted: #9499af;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .banner-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .banner-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      max-height: 220px;
+      object-fit: cover;
+    }
+
+    .header-content {
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #cfd5e6;
+    }
+
+    input[type="text"], input[type="password"], select {
+      background: #0d0a1c;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .checkbox-group input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent-purple);
+      cursor: pointer;
+    }
+
+    .btn {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00f2fe, #4facfe, #9d4edd);
+      color: #0b0914;
+      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 242, 254, 0.5);
+    }
+
+    .btn-secondary {
+      background: #1e1838;
+      color: #fff;
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-secondary:hover {
+      background: #272047;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .action-row .btn {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .tv-tips {
+      background: #110d24;
+      border-left: 4px solid var(--accent-cyan);
+      padding: 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #c4cadc;
+    }
+
+    .manifest-box {
+      background: #0d0a1c;
+      padding: 12px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #00f2fe;
+      word-break: break-all;
+      border: 1px dashed var(--card-border);
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="banner-card">
+      <img src="/assets/banner.jpg" alt="Skipr Banner" class="banner-img" onerror="this.style.display='none'">
+      <div class="header-content">
+        <h1>SKIPR</h1>
+        <p class="subtitle">Automatic Intro & Outro Skipping for Stremio on TV & Desktop</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">⚡ 1. Provider & Scraper Setup</div>
+
+      <div class="form-group">
+        <label for="debridProvider">Debrid Service</label>
+        <select id="debridProvider">
+          <option value="realdebrid" selected>Real-Debrid</option>
+          <option value="torbox">TorBox</option>
+          <option value="alldebrid">AllDebrid</option>
+          <option value="premiumize">Premiumize</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="debridKey">Debrid API Key / Token</label>
+        <input type="password" id="debridKey" placeholder="Paste your API key here (e.g. Real-Debrid API token)">
+      </div>
+
+      <div class="form-group">
+        <label for="scraperUrl">Upstream Scraper Source</label>
+        <select id="scraperSelect">
+          <option value="https://torrentio.strem.fun">Torrentio (Default)</option>
+          <option value="https://comet.elfhosted.com">Comet</option>
+          <option value="https://aiostreams.elfhosted.com">AIOStreams</option>
+          <option value="custom">Custom URL...</option>
+        </select>
+        <input type="text" id="customScraper" placeholder="https://your-custom-scraper.fun" style="display: none; margin-top: 6px;">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">⚙️ 2. Skip Settings</div>
+      <label class="checkbox-group">
+        <input type="checkbox" id="skipIntro" checked>
+        <span>Auto-Skip TV Show Intros & Openings (OP)</span>
+      </label>
+      <label class="checkbox-group">
+        <input type="checkbox" id="skipRecap" checked>
+        <span>Auto-Skip Episode Recaps</span>
+      </label>
+      <label class="checkbox-group">
+        <input type="checkbox" id="skipOutro">
+        <span>Auto-Skip Credits & Outros (ED)</span>
+      </label>
+    </div>
+
+    <div class="card">
+      <div class="section-title">🚀 3. Install to Stremio</div>
+      
+      <div class="action-row">
+        <a href="#" id="installBtn" class="btn btn-primary">⚡ Install to Stremio</a>
+        <button id="copyBtn" class="btn btn-secondary">📋 Copy Manifest URL</button>
+      </div>
+
+      <div class="form-group">
+        <label>Your Addon Manifest URL:</label>
+        <div id="manifestUrl" class="manifest-box">Generating URL...</div>
+      </div>
+
+      <div class="tv-tips">
+        📺 <strong>Watching on Android TV / Fire Stick?</strong><br>
+        • <strong>Fastest 10-Second Method:</strong> Log into the same Stremio account on your phone/PC and click <em>Install to Stremio</em> above. Stremio will instantly sync Skipr to your TV!<br>
+        • <strong>Or on your TV:</strong> Open Stremio $\rightarrow$ Addons $\rightarrow$ Search or paste the short URL above.
+      </div>
+    </div>
+
+    <div class="footer">
+      Skipr Addon • Open-source • Powered by Ani-Skip, TheIntroDB & Video Chapters
+    </div>
+  </div>
+
+  <script>
+    function encodeConfig(obj) {
+      const json = JSON.stringify(obj);
+      return btoa(json).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    function updateUrls() {
+      const provider = document.getElementById('debridProvider').value;
+      const key = document.getElementById('debridKey').value.trim();
+      const scraperSelect = document.getElementById('scraperSelect').value;
+      const customScraper = document.getElementById('customScraper').value.trim();
+      const scraperUrl = scraperSelect === 'custom' ? customScraper : scraperSelect;
+      const skipIntro = document.getElementById('skipIntro').checked;
+      const skipRecap = document.getElementById('skipRecap').checked;
+      const skipOutro = document.getElementById('skipOutro').checked;
+
+      const config = {
+        debridProvider: provider,
+        debridKey: key,
+        scraperUrl: scraperUrl,
+        skipIntro: skipIntro,
+        skipRecap: skipRecap,
+        skipOutro: skipOutro
+      };
+
+      const encoded = encodeConfig(config);
+      const origin = window.location.origin;
+      const manifestUrl = `${origin}/${encoded}/manifest.json`;
+      const stremioUrl = `stremio://${manifestUrl.replace(/^https?:\/\//, '')}`;
+
+      document.getElementById('manifestUrl').innerText = manifestUrl;
+      document.getElementById('installBtn').href = stremioUrl;
+    }
+
+    document.getElementById('scraperSelect').addEventListener('change', (e) => {
+      document.getElementById('customScraper').style.display = e.target.value === 'custom' ? 'block' : 'none';
+      updateUrls();
+    });
+
+    ['debridProvider', 'debridKey', 'customScraper', 'skipIntro', 'skipRecap', 'skipOutro'].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener('input', updateUrls);
+      el.addEventListener('change', updateUrls);
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const text = document.getElementById('manifestUrl').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.innerText = '✅ Copied!';
+        setTimeout(() => btn.innerText = '📋 Copy Manifest URL', 2000);
+      });
+    });
+
+    updateUrls();
+  </script>
+</body>
+</html>

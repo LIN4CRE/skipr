@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f0c1b"/>
+      <stop offset="50%" stop-color="#181335"/>
+      <stop offset="100%" stop-color="#2d124d"/>
+    </linearGradient>
+    <linearGradient id="neon-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe"/>
+      <stop offset="50%" stop-color="#4facfe"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background rounded squircle -->
+  <rect width="512" height="512" rx="128" fill="url(#bg-grad)"/>
+  <rect width="504" height="504" x="4" y="4" rx="124" fill="none" stroke="url(#neon-grad)" stroke-width="4" opacity="0.6"/>
+
+  <!-- Glowing Fast Skip Icon -->
+  <g filter="url(#glow)">
+    <!-- First Play Arrow -->
+    <path d="M140 160 L260 256 L140 352 Z" fill="url(#neon-grad)" />
+    <!-- Second Play Arrow (Double forward) -->
+    <path d="M260 160 L380 256 L260 352 Z" fill="url(#neon-grad)" />
+    <!-- Stop / End Bar -->
+    <rect x="385" y="160" width="22" height="192" rx="10" fill="#00f2fe" />
+    
+    <!-- Lightning bolt accent -->
+    <path d="M250 130 L220 220 L270 220 L230 310" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.9"/>
+  </g>
+
+  <!-- Brand Text -->
+  <text x="256" y="440" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="52" fill="#ffffff" text-anchor="middle" letter-spacing="6">SKIPR</text>
+</svg>
