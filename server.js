@@ -4,8 +4,10 @@ const cors = require('cors');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 
-const { PORT, PUBLIC_URL } = require('./src/config/constants');
+const { PORT } = require('./src/config/constants');
 const logger = require('./src/utils/logger');
+
+let currentPublicUrl = process.env.PUBLIC_URL || null;
 
 // Setup static ffmpeg / ffprobe binaries if available
 try {
@@ -31,6 +33,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Web Configurator UI
 app.get(['/', '/configure', '/configure.html'], (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Server and Tunnel Info
+app.get('/api/info', (req, res) => {
+    res.json({
+        localUrl: `http://localhost:${PORT}`,
+        publicUrl: currentPublicUrl || `http://localhost:${PORT}`
+    });
 });
 
 // Health Checks
@@ -59,10 +69,30 @@ app.use((err, req, res, next) => {
 });
 
 if (require.main === module) {
-    app.listen(PORT, '0.0.0.0', () => {
+    app.listen(PORT, '0.0.0.0', async () => {
         logger.success(`🚀 Skipr is running at: http://localhost:${PORT}`);
-        logger.info(`📺 Stremio Manifest: http://localhost:${PORT}/manifest.json`);
         logger.info(`⚙️  Configurator:     http://localhost:${PORT}/configure`);
+
+        // Automatically start public HTTPS tunnel for Stremio TV & Web
+        if (!process.env.PUBLIC_URL && process.env.DISABLE_TUNNEL !== 'true') {
+            try {
+                const lt = require('localtunnel');
+                logger.info('Opening secure HTTPS tunnel for Stremio TV & Web...');
+                const tunnel = await lt({ port: PORT });
+                currentPublicUrl = tunnel.url;
+                logger.success(`🌐 Public HTTPS URL: ${currentPublicUrl}`);
+                logger.info(`📺 Stremio Manifest: ${currentPublicUrl}/manifest.json`);
+                logger.info(`⚙️  Web Configurator: ${currentPublicUrl}/configure`);
+
+                tunnel.on('close', () => {
+                    logger.warn('HTTPS Tunnel closed');
+                });
+            } catch (e) {
+                logger.warn(`Could not start HTTPS tunnel: ${e.message}`);
+            }
+        } else if (currentPublicUrl) {
+            logger.info(`🌐 Public URL configured: ${currentPublicUrl}`);
+        }
     });
 }
 
