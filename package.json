@@ -19,7 +19,11 @@
     "realdebrid",
     "hls"
   ],
-  "author": "Skipr Contributors",
+  "author": "David Linacre (LIN4CRE)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LIN4CRE/skipr.git"
+  },
   "license": "MIT",
   "dependencies": {
     "axios": "^1.7.9",

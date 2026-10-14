@@ -100,7 +100,7 @@ sequenceDiagram
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/skipr.git
+git clone https://github.com/LIN4CRE/skipr.git
 cd skipr
 
 # Start with Docker Compose
@@ -115,7 +115,7 @@ Skipr is now running at `http://localhost:7005`!
 
 ```bash
 # Prerequisites: Node.js 18+ and ffmpeg
-git clone https://github.com/your-username/skipr.git
+git clone https://github.com/LIN4CRE/skipr.git
 cd skipr
 
 # Install dependencies
