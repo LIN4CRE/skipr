@@ -7,7 +7,7 @@
     "start": "node server.js",
     "dev": "node server.js",
     "publish:stremio": "node scripts/publish.js",
-    "test": "node tests/skipr.test.js"
+    "test": "node tests/skipr.test.js && node tests/integration.test.js"
   },
   "keywords": [
     "stremio",
