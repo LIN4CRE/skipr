@@ -1,12 +1,14 @@
 services:
   - type: web
     name: skipr
-    runtime: node
+    env: node
     plan: free
     buildCommand: npm install
     startCommand: node server.js
     envVars:
       - key: PORT
         value: 10000
+      - key: DISABLE_TUNNEL
+        value: "true"
       - key: NODE_ENV
-        value: production
+        value: "production"

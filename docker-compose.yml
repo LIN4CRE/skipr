@@ -3,11 +3,11 @@ version: '3.8'
 services:
   skipr:
     build: .
-    container_name: skipr-addon
-    restart: unless-stopped
+    container_name: skipr
+    restart: always
     ports:
       - "7005:7005"
     environment:
       - PORT=7005
+      - DISABLE_TUNNEL=true
       - NODE_ENV=production
-      # - PUBLIC_URL=https://your-domain.com

@@ -1,18 +1,14 @@
 FROM node:20-alpine
 
-# Install ffmpeg
-RUN apk add --no-cache ffmpeg
-
 WORKDIR /app
 
-# Install dependencies
 COPY package*.json ./
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
-# Copy application source
 COPY . .
 
 ENV PORT=7005
+ENV DISABLE_TUNNEL=true
 ENV NODE_ENV=production
 
 EXPOSE 7005

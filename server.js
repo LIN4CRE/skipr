@@ -75,30 +75,80 @@ if (require.main === module) {
 
         // Automatically start public HTTPS tunnel for Stremio TV & Web with auto-reconnect
         if (!process.env.PUBLIC_URL && process.env.DISABLE_TUNNEL !== 'true') {
-            async function establishTunnel() {
-                try {
-                    const lt = require('localtunnel');
-                    logger.info('Opening secure HTTPS tunnel for Stremio TV & Web...');
-                    const tunnel = await lt({ port: PORT });
-                    currentPublicUrl = tunnel.url;
-                    logger.success(`🌐 Public HTTPS URL: ${currentPublicUrl}`);
-                    logger.info(`📺 Stremio Manifest: ${currentPublicUrl}/manifest.json`);
-                    logger.info(`⚙️  Web Configurator: ${currentPublicUrl}/configure`);
+            const { spawn, execSync } = require('child_process');
+            const axios = require('axios');
 
-                    tunnel.on('close', () => {
-                        logger.warn('HTTPS Tunnel disconnected. Reconnecting in 5 seconds...');
-                        setTimeout(establishTunnel, 5000);
-                    });
-                    tunnel.on('error', (err) => {
-                        logger.warn(`Tunnel error: ${err.message}. Retrying in 5 seconds...`);
-                        setTimeout(establishTunnel, 5000);
-                    });
-                } catch (e) {
-                    logger.warn(`Could not start HTTPS tunnel: ${e.message}. Retrying in 10s...`);
-                    setTimeout(establishTunnel, 10000);
+            async function publishToStremio(manifestUrl) {
+                try {
+                    const resp = await axios.post('https://api.strem.io/api/addonPublish', {
+                        transportUrl: manifestUrl,
+                        transportName: 'http'
+                    }, { timeout: 8000 });
+                    logger.success(`📡 Stremio Central Registry updated: ${JSON.stringify(resp.data)}`);
+                } catch (err) {
+                    logger.warn(`Stremio Central notification: ${err.response?.data?.error?.message || err.message}`);
                 }
             }
-            establishTunnel();
+
+            function startCloudflaredTunnel() {
+                logger.info('Starting Cloudflare Tunnel for high-speed HTTPS access...');
+                let tunnelProc = null;
+                try {
+                    tunnelProc = spawn('cloudflared', ['tunnel', '--url', `http://127.0.0.1:${PORT}`]);
+                } catch (e) {
+                    return null;
+                }
+
+                tunnelProc.stderr.on('data', (data) => {
+                    const str = data.toString();
+                    const match = str.match(/https:\/\/[a-z0-9\-]+\.trycloudflare\.com/i);
+                    if (match && currentPublicUrl !== match[0]) {
+                        currentPublicUrl = match[0];
+                        logger.success(`🌐 Public Cloudflare HTTPS URL: ${currentPublicUrl}`);
+                        logger.info(`📺 Stremio Manifest: ${currentPublicUrl}/manifest.json`);
+                        logger.info(`⚙️  Web Configurator: ${currentPublicUrl}/configure`);
+                        setTimeout(() => publishToStremio(`${currentPublicUrl}/manifest.json`), 5000);
+                    }
+                });
+
+                tunnelProc.on('close', () => {
+                    logger.warn('Cloudflare tunnel closed. Reconnecting in 5 seconds...');
+                    setTimeout(startCloudflaredTunnel, 5000);
+                });
+
+                tunnelProc.on('error', () => {
+                    logger.warn('Could not launch cloudflared. Falling back to localtunnel...');
+                    startLocaltunnel();
+                });
+
+                return tunnelProc;
+            }
+
+            function startLocaltunnel() {
+                const lt = require('localtunnel');
+                logger.info('Opening fallback HTTPS tunnel...');
+                lt({ port: PORT })
+                    .then(tunnel => {
+                        currentPublicUrl = tunnel.url;
+                        logger.success(`🌐 Public HTTPS URL: ${currentPublicUrl}`);
+                        publishToStremio(`${currentPublicUrl}/manifest.json`);
+
+                        tunnel.on('close', () => {
+                            logger.warn('Tunnel closed. Reconnecting in 5s...');
+                            setTimeout(startLocaltunnel, 5000);
+                        });
+                        tunnel.on('error', () => setTimeout(startLocaltunnel, 5000));
+                    })
+                    .catch(() => setTimeout(startLocaltunnel, 10000));
+            }
+
+            // Test if cloudflared is available
+            try {
+                execSync('cloudflared --version', { stdio: 'ignore' });
+                startCloudflaredTunnel();
+            } catch {
+                startLocaltunnel();
+            }
         } else if (currentPublicUrl) {
             logger.info(`🌐 Public URL configured: ${currentPublicUrl}`);
         }

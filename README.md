@@ -12,9 +12,31 @@
 [![Docker: Ready](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 [![Buy Me a Coffee](https://img.shields.io/badge/Donate-Buy%20Me%20a%20Coffee-FFDD00.svg?logo=buy-me-a-coffee&logoColor=black)](https://paypal.me/dlinacre16)
 
-[**Features**](#-features) • [**Quick Start for TV**](#-quick-start-for-tv) • [**How It Works**](#-how-it-works) • [**Self-Hosting**](#-self-hosting) • [**Configuration**](#-configuration)
+<br/>
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/LIN4CRE/skipr)
+&nbsp;
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/LIN4CRE/skipr)
+&nbsp;
+[![Deploy on Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&repository=github.com/LIN4CRE/skipr&branch=main)
+
+[**Features**](#-features) • [**24/7 Cloud Hosting**](#️-247-cloud-hosting-no-pc-required) • [**Quick Start for TV**](#-quick-start-for-tv) • [**How It Works**](#-how-it-works) • [**Self-Hosting**](#-self-hosting)
 
 </div>
+
+---
+
+## ☁️ 24/7 Cloud Hosting (No PC Required)
+
+Want Skipr running 24/7 in the cloud so you can stream on your TV without keeping your computer on? Deploy with 1 click for free:
+
+| Platform | Free Tier | Deploy Button |
+| :--- | :--- | :--- |
+| **Render** | Free 24/7 Web Service | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/LIN4CRE/skipr) |
+| **Vercel** | Free Global Serverless | [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/LIN4CRE/skipr) |
+| **Koyeb** | Free Micro Container | [![Deploy on Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&repository=github.com/LIN4CRE/skipr&branch=main) |
+
+Once deployed, copy your cloud manifest URL (e.g. `https://skipr-xxxx.onrender.com/manifest.json`), paste it into Stremio's search bar, and you're good to go!
 
 ---
 
