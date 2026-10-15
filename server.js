@@ -21,6 +21,7 @@ try {
 
 const addonRoutes = require('./src/routes/addon');
 const hlsRoutes = require('./src/routes/hls');
+const skipService = require('./src/services/skip-service');
 
 const app = express();
 
@@ -42,6 +43,18 @@ app.get('/api/info', (req, res) => {
         localUrl: `http://localhost:${PORT}`,
         publicUrl: currentPublicUrl || `http://localhost:${PORT}`
     });
+});
+
+// Interactive Skip Timestamp Tester
+app.get('/api/test-skip', async (req, res) => {
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ error: 'Missing id query parameter (e.g. tt0944947:1:1)' });
+    try {
+        const segments = await skipService.getSkipSegments(id);
+        res.json({ id, segments: segments || [] });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // Health Checks

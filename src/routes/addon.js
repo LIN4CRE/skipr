@@ -28,9 +28,9 @@ function handleManifest(req, res) {
     };
 
     if (userConfig.debridProvider && userConfig.debridProvider !== 'none') {
-        customManifest.description = `⚡ Skipr [Active: ${userConfig.debridProvider.toUpperCase()}]: Auto-skips intros & recaps seamlessly.`;
+        customManifest.description = `⚡ Skipr [Active: ${userConfig.debridProvider.toUpperCase()}]: Auto-skips intros & outros seamlessly.`;
     } else {
-        customManifest.description = `⚡ Skipr [Free Mode]: Auto-skips TV intros & recaps seamlessly.`;
+        customManifest.description = `⚡ Skipr [Free Mode]: Auto-skips TV intros & outros seamlessly (no keys needed).`;
     }
 
     res.setHeader('Access-Control-Allow-Origin', '*');

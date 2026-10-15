@@ -63,20 +63,45 @@ class SkipService {
     }
 
     /**
-     * Query TheIntroDB
+     * Query TheIntroDB v3 API for TV series intro and credits/outro
      */
     async getTheIntroDbSegments(imdbId, season, episode) {
         if (!imdbId || season == null || episode == null) return [];
         try {
-            const url = `https://api.theintrodb.org/v1/episodes/${imdbId}/${season}/${episode}`;
-            const resp = await axios.get(url, { timeout: 3000 });
-            if (resp.data && resp.data.intro) {
-                return [{
-                    category: 'Intro',
-                    start: resp.data.intro.start,
-                    end: resp.data.intro.end
-                }];
+            const url = `https://api.theintrodb.org/v3/media?imdb_id=${encodeURIComponent(imdbId)}&season=${season}&episode=${episode}`;
+            const resp = await axios.get(url, { timeout: 3500 });
+            const data = resp.data;
+            if (!data) return [];
+
+            const segments = [];
+
+            // Parse intro
+            if (Array.isArray(data.intro) && data.intro.length > 0) {
+                const item = data.intro[0];
+                const startSec = (item.start_ms != null ? item.start_ms : 0) / 1000;
+                const endSec = (item.end_ms != null ? item.end_ms : 0) / 1000;
+                if (endSec > startSec) {
+                    segments.push({
+                        category: 'Intro',
+                        start: startSec,
+                        end: endSec
+                    });
+                }
             }
+
+            // Parse credits / outro
+            if (Array.isArray(data.credits) && data.credits.length > 0) {
+                const item = data.credits[0];
+                if (item.start_ms != null && item.start_ms > 0) {
+                    segments.push({
+                        category: 'Outro',
+                        start: item.start_ms / 1000,
+                        end: item.end_ms ? item.end_ms / 1000 : null
+                    });
+                }
+            }
+
+            return segments;
         } catch {
             // Quiet fail
         }

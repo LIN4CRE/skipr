@@ -53,12 +53,15 @@ Typing long repository names or URLs using an on-screen TV remote is frustrating
 ## ✨ Features
 
 - **⚡ Seamless Auto-Skipping:** Dynamically bypasses TV show intros, openings, and recaps without touching the remote.
+- **🎬 Automated Outro & Credits Skip:** Automatically fast-forwards through end credits, cueing up the next episode seamlessly in Stremio's binge player.
+- **🆓 100% Free Mode (No Keys Required):** Zero API keys or Real-Debrid subscription required. Works out of the box with public P2P torrent streams routed through Stremio's local engine.
 - **🎯 Multi-Tier Timestamp Engine:**
   1. **Ani-Skip API:** Over 150,000+ anime opening (OP) and ending (ED) timestamps.
-  2. **TheIntroDB & Offline Skips:** Hundreds of popular western series pre-indexed offline.
+  2. **TheIntroDB v3 & Offline Skips:** Live intro and credits database for thousands of TV series, with hundreds of popular shows pre-cached offline.
   3. **Embedded Chapter Probing:** Fallback to video chapter markers (`Intro`, `Opening`, `Credits`) via `ffprobe`.
+- **🔍 Built-in Web Skip Tester:** Verify exact intro and credits timestamps for any IMDb episode directly in your browser before installing.
 - **📺 Dual Stream Routing:** Offers a dedicated `⚡ Skipr [Auto-Skip]` stream plus the `📺 Direct Stream` fallback so you always have a working stream.
-- **🔓 Debrid Integration:** Works with Real-Debrid, TorBox, AllDebrid, and Premiumize.
+- **🔓 Optional Debrid Integration:** Works with Real-Debrid, TorBox, AllDebrid, and Premiumize for users who have them.
 - **🔄 Scraper Compatibility:** Sits seamlessly on top of **Torrentio**, **Comet**, **MediaFusion**, or **AIOStreams**.
 - **🐳 1-Command Self-Hosting:** Run with Docker Compose or lightweight Node.js (no heavy external database needed).
 
@@ -77,9 +80,9 @@ flowchart LR
 
 ### Option A: The 10-Second Account Sync (Recommended)
 1. Open the **Skipr Web Configurator** (`http://localhost:7005` or your hosted URL) on your phone or PC.
-2. Select your Debrid provider and paste your API key.
+2. Leave Debrid as **None (Free / Direct Torrents)** or choose your preferred provider.
 3. Click **⚡ Install to Stremio**.
-4. Turn on your TV and open **Stremio** — Skipr is now installed and active!
+4. Turn on your TV and open **Stremio** — Skipr is now installed and active across all your devices!
 
 ### Option B: Direct URL on TV
 1. Open Stremio on your TV $\rightarrow$ Navigate to **Addons**.

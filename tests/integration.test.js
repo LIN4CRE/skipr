@@ -111,7 +111,16 @@ async function runIntegrationTests() {
         assert.strictEqual(notFound.body.error, 'Route not found');
         console.log('   ✅ Non-existent routes return structured 404 response\n');
 
-        console.log('🎉 ALL 8 INTEGRATION TESTS PASSED WITH ZERO ERRORS!\n');
+        // Test 9: Skip Tester API endpoint
+        console.log('9. Testing /api/test-skip?id=tt0944947:1:1...');
+        const skipTest = await makeRequest('/api/test-skip?id=tt0944947:1:1');
+        assert.strictEqual(skipTest.statusCode, 200);
+        assert.strictEqual(skipTest.body.id, 'tt0944947:1:1');
+        assert.ok(Array.isArray(skipTest.body.segments));
+        assert.ok(skipTest.body.segments.length > 0);
+        console.log('   ✅ /api/test-skip returned valid skip segments for Game of Thrones S01E01\n');
+
+        console.log('🎉 ALL 9 INTEGRATION TESTS PASSED WITH ZERO ERRORS!\n');
     } finally {
         server.close();
     }

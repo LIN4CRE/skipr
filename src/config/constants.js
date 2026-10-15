@@ -7,7 +7,7 @@ const MANIFEST = {
     id: 'org.skipr.addon',
     version: '1.0.0',
     name: 'Skipr',
-    description: '⚡ Skipr: Auto-skips TV intros & recaps seamlessly on TV and desktop.',
+    description: '⚡ Skipr: Auto-skips TV intros & outros seamlessly on TV and desktop (no keys required).',
     logo: `${PUBLIC_URL}/assets/icon.svg`,
     background: `${PUBLIC_URL}/assets/banner.jpg`,
     resources: ['stream', 'subtitles'],
