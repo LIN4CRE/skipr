@@ -3,11 +3,24 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
+const axios = require('axios');
 
 const { PORT } = require('./src/config/constants');
 const logger = require('./src/utils/logger');
 
 let currentPublicUrl = process.env.PUBLIC_URL || null;
+
+async function publishToStremio(manifestUrl) {
+    try {
+        const resp = await axios.post('https://api.strem.io/api/addonPublish', {
+            transportUrl: manifestUrl,
+            transportName: 'http'
+        }, { timeout: 8000 });
+        logger.success(`📡 Stremio Central Registry updated: ${JSON.stringify(resp.data)}`);
+    } catch (err) {
+        logger.warn(`Stremio Central notification: ${err.response?.data?.error?.message || err.message}`);
+    }
+}
 
 // Setup static ffmpeg / ffprobe binaries if available
 try {
@@ -57,6 +70,24 @@ app.get('/api/test-skip', async (req, res) => {
     }
 });
 
+// Publish Addon to Stremio Central Catalog Endpoint
+app.post('/api/publish-central', async (req, res) => {
+    const targetUrl = (req.body && req.body.url) || (currentPublicUrl ? `${currentPublicUrl}/manifest.json` : null);
+    if (!targetUrl || !targetUrl.startsWith('https://')) {
+        return res.status(400).json({ error: 'A public HTTPS manifest URL is required to publish to Stremio Central.' });
+    }
+    try {
+        const resp = await axios.post('https://api.strem.io/api/addonPublish', {
+            transportUrl: targetUrl,
+            transportName: 'http'
+        }, { timeout: 8000 });
+        res.json({ success: true, result: resp.data });
+    } catch (e) {
+        const errData = e.response ? e.response.data : e.message;
+        res.status(502).json({ error: 'Stremio Central API response', details: errData });
+    }
+});
+
 // Health Checks
 app.get(['/health', '/ping'], (req, res) => {
     res.json({
@@ -90,19 +121,6 @@ if (require.main === module) {
         // Automatically start public HTTPS tunnel for Stremio TV & Web with auto-reconnect
         if (!process.env.PUBLIC_URL && process.env.DISABLE_TUNNEL !== 'true') {
             const { spawn, execSync } = require('child_process');
-            const axios = require('axios');
-
-            async function publishToStremio(manifestUrl) {
-                try {
-                    const resp = await axios.post('https://api.strem.io/api/addonPublish', {
-                        transportUrl: manifestUrl,
-                        transportName: 'http'
-                    }, { timeout: 8000 });
-                    logger.success(`📡 Stremio Central Registry updated: ${JSON.stringify(resp.data)}`);
-                } catch (err) {
-                    logger.warn(`Stremio Central notification: ${err.response?.data?.error?.message || err.message}`);
-                }
-            }
 
             function startCloudflaredTunnel() {
                 logger.info('Starting Cloudflare Tunnel for high-speed HTTPS access...');
@@ -165,6 +183,7 @@ if (require.main === module) {
             }
         } else if (currentPublicUrl) {
             logger.info(`🌐 Public URL configured: ${currentPublicUrl}`);
+            setTimeout(() => publishToStremio(`${currentPublicUrl}/manifest.json`), 3000);
         }
     });
 }

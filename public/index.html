@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Skipr — Auto Intro Skip for Stremio</title>
-  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
   <style>
     :root {
       --bg: #0b0914;
@@ -318,7 +318,7 @@
 <body>
   <div class="container">
     <div class="banner-card">
-      <img src="/assets/banner.jpg" alt="Skipr Banner" class="banner-img" onerror="this.style.display='none'">
+      <img src="./assets/banner.jpg" alt="Skipr Banner" class="banner-img" onerror="this.style.display='none'">
       <div class="header-content">
         <h1>SKIPR</h1>
         <p class="subtitle">Automatic Intro & Outro Skipping for Stremio on TV & Desktop</p>
@@ -473,7 +473,9 @@
       
       // Use public HTTPS tunnel URL if available; otherwise use current origin or 127.0.0.1
       let base = publicUrl || window.location.origin;
-      if (base.includes('localhost')) {
+      if (window.location.hostname.includes('github.io')) {
+        base = publicUrl || 'https://youth-painted-amd-drove.trycloudflare.com';
+      } else if (base.includes('localhost')) {
         base = base.replace('localhost', '127.0.0.1');
       }
 
@@ -491,7 +493,7 @@
     }
 
     // Fetch server tunnel info for HTTPS Stremio compatibility
-    fetch('/api/info')
+    fetch('./api/info')
       .then(res => res.json())
       .then(data => {
         const badge = document.getElementById('connectionBadge');
@@ -506,7 +508,13 @@
         updateUrls();
       })
       .catch(() => {
-        document.getElementById('connectionBadge').innerText = '🏠 Local Host';
+        const badge = document.getElementById('connectionBadge');
+        if (window.location.hostname.includes('github.io')) {
+          badge.innerText = '🌐 GitHub Pages Online';
+          badge.style.color = '#00f2fe';
+        } else {
+          badge.innerText = '🏠 Local Host';
+        }
         updateUrls();
       });
 
@@ -549,7 +557,10 @@
       box.innerHTML = `<span style="color: var(--accent-cyan);">⏳ Querying skip databases for <strong>${id}</strong>...</span>`;
 
       try {
-        const res = await fetch(`/api/test-skip?id=${encodeURIComponent(id)}`);
+        const testEndpoint = window.location.hostname.includes('github.io')
+          ? `${publicUrl || 'https://youth-painted-amd-drove.trycloudflare.com'}/api/test-skip?id=${encodeURIComponent(id)}`
+          : `./api/test-skip?id=${encodeURIComponent(id)}`;
+        const res = await fetch(testEndpoint);
         const data = await res.json();
 
         if (data.error) {
