@@ -7,12 +7,19 @@ const skipService = require('../services/skip-service');
 const scraperResolver = require('../services/scraper-resolver');
 const logger = require('../utils/logger');
 
+function getBaseUrl(req) {
+    const host = req.get('host') || '127.0.0.1:7005';
+    let protocol = req.get('x-forwarded-proto') || req.protocol || 'http';
+    if (host.includes('trycloudflare.com') || host.includes('render.com') || host.includes('vercel.app')) {
+        protocol = 'https';
+    }
+    return `${protocol}://${host}`;
+}
+
 // Serve Addon Manifest
 function handleManifest(req, res) {
     const userConfig = decodeConfig(req.params.config);
-    const host = req.get('host') || '127.0.0.1:7005';
-    const protocol = req.protocol || 'http';
-    const currentBase = `${protocol}://${host}`;
+    const currentBase = getBaseUrl(req);
 
     const customManifest = {
         ...MANIFEST,
@@ -39,18 +46,16 @@ async function handleStreams(req, res) {
     const { type, id } = req.params;
     const userConfig = decodeConfig(req.params.config);
     const clientInfo = detectClient(req.get('User-Agent'), req.get('Origin'));
-
-    const host = req.get('host') || '127.0.0.1:7005';
-    const protocol = req.protocol || 'http';
-    const currentBase = `${protocol}://${host}`;
+    const currentBase = getBaseUrl(req);
 
     logger.info(`Stream request for ${type}/${id} on ${clientInfo.client}`);
 
-    // Check for skip segments
+    // Check for skip segments (Intro & Outro)
     const skipSegments = await skipService.getSkipSegments(id);
     const introSkip = skipSegments ? skipSegments.find(s => s.category === 'Intro') : null;
+    const outroSkip = skipSegments ? skipSegments.find(s => s.category === 'Outro') : null;
 
-    // Fetch upstream streams
+    // Fetch upstream streams (Torrentio free mode or custom scraper)
     const upstreamUrl = userConfig.scraperUrl || process.env.DEFAULT_SCRAPER_URL;
     const rawStreams = await scraperResolver.getStreams(upstreamUrl, type, id);
 
@@ -62,32 +67,39 @@ async function handleStreams(req, res) {
     const enhancedStreams = [];
 
     for (const stream of rawStreams) {
-        const streamUrl = stream.url || stream.externalUrl;
+        const isTorrent = !stream.url && !stream.externalUrl && stream.infoHash;
+        const effectiveStreamUrl = stream.url || stream.externalUrl || (isTorrent ? `http://127.0.0.1:11470/${stream.infoHash}/${stream.fileIdx || 0}` : null);
         const baseTitle = stream.title || stream.name || 'Stream';
 
-        if (introSkip && streamUrl) {
+        if (introSkip && effectiveStreamUrl) {
             const skipStart = Math.floor(introSkip.start);
             const skipEnd = Math.ceil(introSkip.end);
+            const outroParam = outroSkip ? `&outroStart=${Math.floor(outroSkip.start)}` : '';
 
-            const hlsUrl = `${currentBase}/hls/manifest.m3u8?stream=${encodeURIComponent(streamUrl)}&start=${skipStart}&end=${skipEnd}&id=${id}&client=${clientInfo.client}`;
+            const hlsUrl = `${currentBase}/hls/manifest.m3u8?stream=${encodeURIComponent(effectiveStreamUrl)}&start=${skipStart}&end=${skipEnd}&id=${id}&client=${clientInfo.client}${outroParam}`;
+
+            let skipLabel = `⚡ [Auto-Skip Intro: ${skipStart}s - ${skipEnd}s]`;
+            if (outroSkip) {
+                skipLabel = `⚡ [Auto-Skip Intro & Outro]`;
+            }
+
+            const streamName = isTorrent ? '⚡ Skipr [Free P2P]' : '⚡ Skipr';
 
             // Add Skip-enabled stream
             enhancedStreams.push({
-                name: '⚡ Skipr',
-                title: `⚡ [Auto-Skip Intro: ${skipStart}s - ${skipEnd}s]\n${baseTitle}`,
+                name: streamName,
+                title: `${skipLabel}\n${baseTitle}`,
                 url: hlsUrl,
-                behaviorHints: stream.behaviorHints || {}
+                behaviorHints: {
+                    ...(stream.behaviorHints || {}),
+                    bingeGroup: `skipr-${id}`
+                }
             });
 
             // Add Original Direct Stream as fallback
-            enhancedStreams.push({
-                name: stream.name || 'Direct',
-                title: `📺 [Original Direct]\n${baseTitle}`,
-                url: streamUrl,
-                behaviorHints: stream.behaviorHints || {}
-            });
+            enhancedStreams.push(stream);
         } else {
-            // Passthrough stream with hint
+            // Passthrough stream
             enhancedStreams.push(stream);
         }
     }

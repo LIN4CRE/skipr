@@ -10,10 +10,19 @@ class HlsProxyService {
         let contentLength = 0;
         let finalUrl = streamUrl;
 
+        // Fast-path for local Stremio P2P torrent streaming engine
+        if (streamUrl.includes('11470') || streamUrl.includes('127.0.0.1')) {
+            return {
+                finalUrl,
+                contentLength: 0,
+                duration: 2400
+            };
+        }
+
         try {
             const resp = await axios.get(streamUrl, {
                 maxRedirects: 5,
-                timeout: 8000,
+                timeout: 3000,
                 headers: { 'Range': 'bytes=0-0', 'User-Agent': 'Stremio/4.4' },
                 responseType: 'stream'
             });
@@ -32,9 +41,11 @@ class HlsProxyService {
             logger.debug(`Could not get stream details via range: ${e.message}`);
         }
 
-        // Try ffprobe for duration if needed
+        // Try ffprobe for duration if needed with safety timeout
         const duration = await new Promise((resolve) => {
+            const timer = setTimeout(() => resolve(0), 2000);
             ffmpeg.ffprobe(finalUrl, (err, meta) => {
+                clearTimeout(timer);
                 if (!err && meta && meta.format && meta.format.duration) {
                     resolve(parseFloat(meta.format.duration));
                 } else {
@@ -81,21 +92,68 @@ class HlsProxyService {
     /**
      * Generate an HLS manifest that starts playback right after the intro (Single Segment Slice)
      */
-    generateSmartManifest(streamUrl, duration, skipEndByte, totalLength) {
+    generateSmartManifest(streamUrl, duration, skipEndByte, totalLength, skipEndTime = 0, outroStartTime = null) {
         const remainingLength = Math.max(0, totalLength - skipEndByte);
-        const approxDuration = Math.max(1, duration);
+        const fullDuration = Math.max(1, duration || 2400);
+        const approxDuration = (outroStartTime && outroStartTime > skipEndTime) ? (outroStartTime - skipEndTime) : fullDuration;
 
-        return [
+        const lines = [
             '#EXTM3U',
-            '#EXT-X-VERSION:4',
+            '#EXT-X-VERSION:6',
             `#EXT-X-TARGETDURATION:${Math.ceil(approxDuration)}`,
             '#EXT-X-MEDIA-SEQUENCE:0',
-            '#EXT-X-PLAYLIST-TYPE:VOD',
-            `#EXTINF:${approxDuration.toFixed(2)},`,
-            `#EXT-X-BYTERANGE:${remainingLength}@${skipEndByte}`,
+            '#EXT-X-PLAYLIST-TYPE:VOD'
+        ];
+
+        if (skipEndTime > 0) {
+            lines.push(`#EXT-X-START:TIME-OFFSET=${skipEndTime.toFixed(1)},PRECISE=YES`);
+        }
+
+        if (remainingLength > 0 && skipEndByte > 0) {
+            lines.push(
+                `#EXTINF:${approxDuration.toFixed(2)},`,
+                `#EXT-X-BYTERANGE:${remainingLength}@${skipEndByte}`,
+                streamUrl
+            );
+        } else {
+            lines.push(
+                `#EXTINF:${approxDuration.toFixed(2)},`,
+                streamUrl
+            );
+        }
+
+        lines.push('#EXT-X-ENDLIST');
+        return lines.join('\n');
+    }
+
+    /**
+     * Generate a Time-Offset HLS manifest that instructs the player to seek past intro automatically
+     * (Zero file-size or byte-range requirement — works for free P2P torrents and cloud)
+     */
+    generateTimeOffsetManifest(streamUrl, duration, skipEndTime, skipStartTime = 0, outroStartTime = null) {
+        const fullDuration = Math.max(1, duration || 2400);
+        const playDuration = (outroStartTime && outroStartTime > skipEndTime) ? outroStartTime : fullDuration;
+        const offset = Math.max(0, skipEndTime || 0);
+
+        const lines = [
+            '#EXTM3U',
+            '#EXT-X-VERSION:6',
+            `#EXT-X-TARGETDURATION:${Math.ceil(playDuration)}`,
+            '#EXT-X-MEDIA-SEQUENCE:0',
+            '#EXT-X-PLAYLIST-TYPE:VOD'
+        ];
+
+        if (offset > 0) {
+            lines.push(`#EXT-X-START:TIME-OFFSET=${offset.toFixed(1)},PRECISE=YES`);
+        }
+
+        lines.push(
+            `#EXTINF:${playDuration.toFixed(2)},`,
             streamUrl,
             '#EXT-X-ENDLIST'
-        ].join('\n');
+        );
+
+        return lines.join('\n');
     }
 
     /**

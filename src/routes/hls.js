@@ -6,7 +6,7 @@ const { detectClient } = require('../utils/client-detection');
 const logger = require('../utils/logger');
 
 router.get(['/hls/manifest.m3u8', '/:config/hls/manifest.m3u8'], async (req, res) => {
-    const { stream, start, end, id, client } = req.query;
+    const { stream, start, end, id, client, outroStart } = req.query;
 
     if (!stream) {
         return res.status(400).send('Missing stream URL parameter');
@@ -15,8 +15,9 @@ router.get(['/hls/manifest.m3u8', '/:config/hls/manifest.m3u8'], async (req, res
     const clientInfo = detectClient(req.get('User-Agent'), req.get('Origin'));
     let introStart = parseFloat(start) || 0;
     let introEnd = parseFloat(end) || 0;
+    let outroStartTime = parseFloat(outroStart) || null;
 
-    logger.info(`Generating Skipr HLS manifest for ${id || 'stream'} (Skip: ${introStart}s - ${introEnd}s) on ${clientInfo.client}`);
+    logger.info(`Generating Skipr HLS manifest for ${id || 'stream'} (Skip: ${introStart}s - ${introEnd}s, Outro: ${outroStartTime || 'none'}) on ${clientInfo.client}`);
 
     try {
         // Fetch stream media details
@@ -38,21 +39,26 @@ router.get(['/hls/manifest.m3u8', '/:config/hls/manifest.m3u8'], async (req, res
         // Generate manifest if skip interval exists
         let manifestContent = '';
 
-        if (introEnd > introStart && totalLength > 0) {
-            const startByte = await hlsProxy.getByteOffset(resolvedUrl, introStart, duration, totalLength);
-            const endByte = await hlsProxy.getByteOffset(resolvedUrl, introEnd, duration, totalLength);
+        if (introEnd > introStart) {
+            if (totalLength > 0) {
+                const startByte = await hlsProxy.getByteOffset(resolvedUrl, introStart, duration, totalLength);
+                const endByte = await hlsProxy.getByteOffset(resolvedUrl, introEnd, duration, totalLength);
 
-            if (clientInfo.isTv || introStart < 5) {
-                // For TV or if intro begins early in the episode, use single-segment smart splice
-                manifestContent = hlsProxy.generateSmartManifest(resolvedUrl, duration, endByte, totalLength);
+                if (clientInfo.isTv || introStart < 5) {
+                    // For TV or if intro begins early in the episode, use single-segment smart splice
+                    manifestContent = hlsProxy.generateSmartManifest(resolvedUrl, duration, endByte, totalLength, introEnd, outroStartTime);
+                } else {
+                    // Multi-segment fragmented skip
+                    manifestContent = hlsProxy.generateFragmentedManifest(resolvedUrl, duration, totalLength, {
+                        startTime: introStart,
+                        endTime: introEnd,
+                        startOffset: startByte,
+                        endOffset: endByte
+                    });
+                }
             } else {
-                // Multi-segment fragmented skip
-                manifestContent = hlsProxy.generateFragmentedManifest(resolvedUrl, duration, totalLength, {
-                    startTime: introStart,
-                    endTime: introEnd,
-                    startOffset: startByte,
-                    endOffset: endByte
-                });
+                // Free P2P or direct stream without byte length: use native EXT-X-START Time-Offset
+                manifestContent = hlsProxy.generateTimeOffsetManifest(resolvedUrl, duration, introEnd, introStart, outroStartTime);
             }
         } else {
             // Direct passthrough manifest or 302 redirect

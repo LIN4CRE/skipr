@@ -62,6 +62,15 @@ async function runTests() {
     assert.ok(smartManifest.includes(testUrl));
     console.log('✅ Test 5 Passed: Smart HLS manifest correctly splices byte-ranges\n');
 
+    // Test 6: Free Mode Time-Offset HLS Playlist (Zero API key / Debrid required)
+    console.log('Test 6: Validating Free Mode Time-Offset HLS Generator (No Debrid / API key)');
+    const freeManifest = hlsProxy.generateTimeOffsetManifest('http://127.0.0.1:11470/546a34f3d494aa47d5eb7b18806927c250c67862/0', 3600, 85, 0, 3400);
+    assert.ok(freeManifest.includes('#EXTM3U'));
+    assert.ok(freeManifest.includes('#EXT-X-START:TIME-OFFSET=85.0,PRECISE=YES'));
+    assert.ok(freeManifest.includes('#EXTINF:3400.00,'));
+    assert.ok(freeManifest.includes('http://127.0.0.1:11470/546a34f3d494aa47d5eb7b18806927c250c67862/0'));
+    console.log('✅ Test 6 Passed: Free Mode Time-Offset manifest enables 100% key-free intro & outro skipping\n');
+
     console.log('🎉 ALL TESTS PASSED SUCCESSFULLY!');
 }
 

@@ -93,10 +93,22 @@ class SkipService {
             return this.cache.get(videoId);
         }
 
+        function normalize(s) {
+            const rawCat = s.category || s.label || 'Intro';
+            const isIntro = /intro|opening|op/i.test(rawCat);
+            const isOutro = /outro|ending|credit|ed/i.test(rawCat);
+            return {
+                category: isIntro ? 'Intro' : (isOutro ? 'Outro' : rawCat),
+                start: parseFloat(s.start) || 0,
+                end: parseFloat(s.end) || 0
+            };
+        }
+
         // 1. Check offline skips database
         if (offlineSkips[videoId]) {
             const seg = offlineSkips[videoId];
-            const result = Array.isArray(seg) ? seg : [seg];
+            const rawList = Array.isArray(seg) ? seg : [seg];
+            const result = rawList.map(normalize);
             this.cache.set(videoId, result);
             return result;
         }
@@ -106,8 +118,9 @@ class SkipService {
             // 2. Try TheIntroDB
             const introDbSegs = await this.getTheIntroDbSegments(parsed.id, parsed.season, parsed.episode);
             if (introDbSegs && introDbSegs.length > 0) {
-                this.cache.set(videoId, introDbSegs);
-                return introDbSegs;
+                const result = introDbSegs.map(normalize);
+                this.cache.set(videoId, result);
+                return result;
             }
         }
 
