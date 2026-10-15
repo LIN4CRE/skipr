@@ -244,6 +244,75 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(255, 221, 0, 0.5);
     }
+
+    .preset-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .preset-pill {
+      background: #1a1438;
+      border: 1px solid var(--card-border);
+      color: #cfd5e6;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .preset-pill:hover {
+      background: var(--accent-purple);
+      color: #fff;
+      border-color: var(--accent-purple);
+    }
+
+    .tester-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .tester-row input {
+      flex: 1;
+    }
+
+    .tester-result {
+      background: #0d0a1c;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      display: none;
+    }
+
+    .tester-result.active {
+      display: block;
+    }
+
+    .tag-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      margin-right: 6px;
+    }
+
+    .tag-intro {
+      background: rgba(0, 242, 254, 0.2);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 242, 254, 0.4);
+    }
+
+    .tag-outro {
+      background: rgba(157, 78, 221, 0.2);
+      color: #c77dff;
+      border: 1px solid rgba(157, 78, 221, 0.4);
+    }
   </style>
 </head>
 <body>
@@ -301,14 +370,41 @@
         <span>Auto-Skip Episode Recaps</span>
       </label>
       <label class="checkbox-group">
-        <input type="checkbox" id="skipOutro">
+        <input type="checkbox" id="skipOutro" checked>
         <span>Auto-Skip Credits & Outros (ED)</span>
       </label>
     </div>
 
     <div class="card">
+      <div class="section-title">🔍 3. Live Skip Database Tester</div>
+      <p style="font-size: 13px; color: var(--text-muted);">
+        Test any series episode ID to inspect exact auto-skip timings before installing. Works 100% free with Ani-Skip, TheIntroDB & local offline cache.
+      </p>
+
+      <div class="form-group">
+        <label>Quick Show Presets:</label>
+        <div class="preset-pills">
+          <button type="button" class="preset-pill" data-id="tt0944947:1:1">🐉 Game of Thrones (S01E01)</button>
+          <button type="button" class="preset-pill" data-id="tt0903747:1:1">🧪 Breaking Bad (S01E01)</button>
+          <button type="button" class="preset-pill" data-id="tt4574334:1:1">🚲 Stranger Things (S01E01)</button>
+          <button type="button" class="preset-pill" data-id="tt2560140:1:1">⚔️ Attack on Titan (S01E01)</button>
+          <button type="button" class="preset-pill" data-id="tt0386676:2:1">📄 The Office (S02E01)</button>
+        </div>
+      </div>
+
+      <div class="tester-row">
+        <input type="text" id="testIdInput" placeholder="IMDb Episode ID (e.g. tt0944947:1:1)" value="tt0944947:1:1">
+        <button type="button" id="runTestBtn" class="btn btn-secondary" style="padding: 10px 16px;">Test Skip</button>
+      </div>
+
+      <div id="testResultBox" class="tester-result">
+        <!-- Rendered results -->
+      </div>
+    </div>
+
+    <div class="card">
       <div class="section-title">
-        <span>🚀 3. Install to Stremio</span>
+        <span>🚀 4. Install to Stremio</span>
         <span id="connectionBadge" class="tunnel-badge">Connecting...</span>
       </div>
       
@@ -436,6 +532,67 @@
         const btn = document.getElementById('copyBtn');
         btn.innerText = '✅ Copied!';
         setTimeout(() => btn.innerText = '📋 Copy Manifest URL', 2000);
+      });
+    });
+
+    // Live Skip Database Tester Logic
+    function formatTime(seconds) {
+      if (seconds == null || seconds <= 0) return 'End of episode';
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    async function testSkipId(id) {
+      const box = document.getElementById('testResultBox');
+      box.className = 'tester-result active';
+      box.innerHTML = `<span style="color: var(--accent-cyan);">⏳ Querying skip databases for <strong>${id}</strong>...</span>`;
+
+      try {
+        const res = await fetch(`/api/test-skip?id=${encodeURIComponent(id)}`);
+        const data = await res.json();
+
+        if (data.error) {
+          box.innerHTML = `<span style="color: #ff5c7c;">❌ Error: ${data.error}</span>`;
+          return;
+        }
+
+        if (!data.segments || data.segments.length === 0) {
+          box.innerHTML = `<span style="color: var(--text-muted);">ℹ️ No skip points in database for <strong>${id}</strong> yet. Skipr will stream the episode without interruption.</span>`;
+          return;
+        }
+
+        let html = `<div style="margin-bottom: 8px; font-weight: 700; color: #00f2fe;">✅ Skip Points Found for ${data.id}:</div>`;
+        data.segments.forEach(seg => {
+          const badgeClass = seg.category === 'Intro' ? 'tag-intro' : 'tag-outro';
+          const dur = (seg.end && seg.end > seg.start) ? ` (${Math.round(seg.end - seg.start)}s duration)` : '';
+          html += `
+            <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: #151126; padding: 8px 12px; border-radius: 6px;">
+              <div>
+                <span class="tag-badge ${badgeClass}">${seg.category}</span>
+                <span style="color: #fff; font-weight: 600;">${formatTime(seg.start)} &rarr; ${formatTime(seg.end)}</span>
+                <span style="color: var(--text-muted); font-size: 12px;">${dur}</span>
+              </div>
+              <span style="color: #00f2fe; font-size: 12px; font-weight: 700;">⚡ Instant Auto-Skip</span>
+            </div>
+          `;
+        });
+        box.innerHTML = html;
+      } catch (err) {
+        box.innerHTML = `<span style="color: #ff5c7c;">❌ Query failed: ${err.message}</span>`;
+      }
+    }
+
+    document.getElementById('runTestBtn').addEventListener('click', () => {
+      const id = document.getElementById('testIdInput').value.trim();
+      if (id) testSkipId(id);
+    });
+
+    document.querySelectorAll('.preset-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        document.getElementById('testIdInput').value = id;
+        testSkipId(id);
       });
     });
 
