@@ -8,6 +8,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node: >=18](https://img.shields.io/badge/node->=18-green.svg)](https://nodejs.org/)
+[![GitHub Release](https://img.shields.io/github/v/release/LIN4CRE/skipr?color=9d4edd)](https://github.com/LIN4CRE/skipr/releases/latest)
+[![GitHub Pages](https://img.shields.io/badge/Web%20Configurator-GitHub%20Pages-00f2fe.svg)](https://lin4cre.github.io/skipr/)
 [![Stremio Protocol: v3](https://img.shields.io/badge/Stremio-Addon%20Protocol%20v3-purple.svg)](https://stremio.github.io/stremio-addon-sdk/)
 [![Docker: Ready](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 [![Buy Me a Coffee](https://img.shields.io/badge/Donate-Buy%20Me%20a%20Coffee-FFDD00.svg?logo=buy-me-a-coffee&logoColor=black)](https://paypal.me/dlinacre16)
@@ -20,7 +22,7 @@
 &nbsp;
 [![Deploy on Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&repository=github.com/LIN4CRE/skipr&branch=main)
 
-[**Features**](#-features) • [**24/7 Cloud Hosting**](#️-247-cloud-hosting-no-pc-required) • [**Quick Start for TV**](#-quick-start-for-tv) • [**How It Works**](#-how-it-works) • [**Self-Hosting**](#-self-hosting)
+[**Live Web Configurator**](https://lin4cre.github.io/skipr/) • [**Features**](#-features) • [**24/7 Cloud Hosting**](#️-247-cloud-hosting-no-pc-required) • [**Quick Start for TV**](#-quick-start-for-tv) • [**How It Works**](#-how-it-works)
 
 </div>
 
@@ -90,6 +92,17 @@ flowchart LR
    ```text
    http://<YOUR-IP>:7005/manifest.json
    ```
+
+### Option C: In-App Search & Community Addon Installation
+1. Open the **Stremio app** on your TV, phone, or PC.
+2. Click **Addons** (the puzzle icon on the left sidebar).
+3. In the top search bar (**Search addons...**):
+   - Type or paste your Skipr manifest URL (e.g. `https://youth-painted-amd-drove.trycloudflare.com/manifest.json` or your cloud Render URL).
+   - Press **Enter** on your keyboard or remote.
+   - Click **Install**!
+4. **Community Addons Catalog:**
+   - Skipr contains automated self-announcing hooks to Stremio's Central Registry (`https://api.strem.io/api/addonPublish`).
+   - Community directory listing is also maintained at [stremio-addons.net](https://stremio-addons.net/).
 
 ---
 
